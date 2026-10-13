@@ -3,7 +3,7 @@
 Guam Code Annotated (GCA) — Guam territorial statutes, by citation and by
 topic/keyword search. Keyless.
 
-Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1763+ live data sources. This is an independent, unofficial integration — not affiliated with, endorsed by, or published by the upstream provider.
+Part of [Pipeworx](https://pipeworx.io) — an MCP gateway connecting AI agents to 1784+ live data sources. This is an independent, unofficial integration — not affiliated with, endorsed by, or published by the upstream provider.
 
 ## Tools
 
@@ -75,23 +75,28 @@ length); it is resolved by picking the longest known chapter number, for the
 given Title, that is a literal prefix of the citation — correct in every
 case sampled.
 
-## `shared/src/pdf-text.ts` needed real fixes, forked pack-local instead
+## `shared/src/pdf-text.ts` needed real fixes — folded in, fork deleted (fleet #2904)
 
-Guam's chapter PDFs defeated the shared extractor in ways it did not yet
-handle, and this pack was built the same week another pack (#2884, New
-Mexico) was independently editing that shared file — so the fixes live in
-`src/gu-pdf-extract.ts`, a pack-local fork of `shared/src/pdf-text.ts`, with
-a loud header comment for whoever next touches the shared extractor to fold
-them in (nothing about them is Guam-specific):
+Guam's chapter PDFs originally defeated the shared extractor in ways it did
+not yet handle, and this pack was built the same week another pack (#2884,
+New Mexico) was independently editing that shared file — so the fixes
+initially lived in `src/gu-pdf-extract.ts`, a pack-local fork of
+`shared/src/pdf-text.ts`, with a loud header comment for whoever next
+touched the shared extractor to fold them in (nothing about them was
+Guam-specific). That fold-in happened in fleet #2904: the fork is gone, this
+pack now calls `extractPdfText` from `@pipeworx/shared` directly, and all
+three fixes below live in `shared/src/pdf-text.ts` itself, benefiting every
+other PDF pack (kentucky-code, north-dakota-code, wyoming-code,
+new-mexico-code), not just this one:
 
 1. **Literal strings weren't routed through the font decoder.** Guam's
    producer (Neevia Document Converter, from Word) writes some non-WinAnsi
    subset fonts' text as parenthesized LITERAL strings (`(abc)Tj`) rather
-   than hex (`<...>Tj`). The shared extractor's `decodeRun` passes a literal
+   than hex (`<...>Tj`). The shared extractor's `decodeRun` passed a literal
    run through unchanged — correct for WinAnsi, but for these fonts the raw
    bytes are a tiny, arbitrary code space meaningful only via the font's own
-   `/ToUnicode` CMap, which the shared code already has the machinery for
-   (built for North Dakota) but only wires to the HEX-string path. Confirmed
+   `/ToUnicode` CMap, which the shared code already had the machinery for
+   (built for North Dakota) but only wired to the HEX-string path. Confirmed
    live: unfixed, `§ 16.10` extracted as control-character noise; fixed, it
    reads correctly.
 2. **A declared `/Length` a few bytes long.** Several older chapter PDFs
@@ -99,26 +104,31 @@ them in (nothing about them is Guam-specific):
    Neevia-converted ones above) declare a `/Length` 1+ bytes longer than
    their actual deflate stream. Python's zlib tolerates the trailing byte
    silently; Node/Workers' strict `DecompressionStream` throws
-   `ERR_TRAILING_JUNK_AFTER_STREAM_END`. Retried with the stream's tail
+   `ERR_TRAILING_JUNK_AFTER_STREAM_END`. Now retried with the stream's tail
    trimmed a byte at a time (up to 4) before giving up.
-3. **A quote-glyph CMap that is wrong in the source file.** One embedded
-   symbol font per chapter PDF (`...+WPTypographicSymbols`, used only for
-   curly quotes) carries a `/ToUnicode` CMap that maps its two codes to
-   U+0041 ('A') and U+0040 ('@') instead of the left/right curly quote it
-   visually renders as. Confirmed by eye: "ADirector of Public Safety@" in
-   raw extraction is "“Director of Public Safety”" with those two codes
-   substituted back — the obviously intended reading, reproduced by any PDF
-   viewer's own copy-paste. Overridden by font name, since no general rule
-   could derive it.
-4. **Crash-adjacent, found while baking the section index.** The shared
+3. **Crash-adjacent, found while baking the section index.** The shared
    `inflate()` helper's two stream writes were fire-and-forget
    (`void writer.write(...)`); a malformed deflate stream (the same PDFs #2
    above describes) rejected that promise as an UNHANDLED rejection,
    invisible to any caller's try/catch and fatal to the whole process —
    crashed `scripts/bake-sections.mjs` outright, mid-run. Fixed by attaching
    a no-op `.catch()` to each write/close; the real failure still surfaces
-   through `reader.read()`, which the caller already handles. Worth
-   checking whether `shared/src/pdf-text.ts` has the same exposure.
+   through `reader.read()`, which the caller already handles.
+
+**One delta stayed pack-local, in `src/gu-font-cmap-fix.ts`, because it
+genuinely IS Guam-specific:** one embedded symbol font per chapter PDF
+(`...+WPTypographicSymbols`, used only for curly quotes) carries a
+`/ToUnicode` CMap that maps its two codes to U+0041 ('A') and U+0040 ('@')
+instead of the left/right curly quote it visually renders as. Confirmed by
+eye: "ADirector of Public Safety@" in raw extraction is "“Director of Public
+Safety”" with those two codes substituted back — the obviously intended
+reading, reproduced by any PDF viewer's own copy-paste. This is a defect in
+Guam's own published PDF, not something a general-purpose extractor could
+derive, so it is passed into `extractPdfText` via its new `fontCMapOverride`
+option — a generic hook (match a font's own dictionary text, optionally
+return a replacement `/ToUnicode` map) with nothing Guam-specific about the
+mechanism itself, available to any future pack that hits a similarly broken
+source PDF.
 
 ## Four capabilities — two available, two are not
 
@@ -214,7 +224,7 @@ directly, instead of just this one's:
 }
 ```
 
-Both URLs reach the same gateway and the same 1763+ data sources. The
+Both URLs reach the same gateway and the same 1784+ data sources. The
 only difference is which pack's tools are listed **directly**; `ask_pipeworx`
 reaches all of them from either one.
 
