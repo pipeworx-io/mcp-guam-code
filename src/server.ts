@@ -11,7 +11,7 @@ import * as bakedIndexModule from './gu-baked-data.js';
 const bakedIndex = Object.fromEntries(Object.entries(bakedIndexModule));
 
 const server = new Server(
-  { name: '@pipeworx/mcp-guam-code', version: '0.1.3' },
+  { name: '@pipeworx/mcp-guam-code', version: '0.1.4' },
   { capabilities: { tools: {} } },
 );
 
