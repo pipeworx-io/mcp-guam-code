@@ -3,7 +3,7 @@
   "name": "io.github.pipeworx-io/guam-code",
   "title": "Guam Code",
   "description": "Guam Code Annotated (GCA) — section lookup and search. Fleet #2888.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "websiteUrl": "https://pipeworx.io/packs/guam-code",
   "repository": {
     "url": "https://github.com/pipeworx-io/mcp-guam-code",
