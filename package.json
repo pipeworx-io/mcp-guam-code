@@ -1,6 +1,6 @@
 {
   "name": "@pipeworx/mcp-guam-code",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Guam Code Annotated (GCA) — section lookup and search. Fleet #2888.",
   "type": "module",
   "main": "lib/index.js",
@@ -27,7 +27,7 @@
     "mode": "gateway",
     "slug": "guam-code",
     "gatewaySlug": "guam-code",
-    "sourceHash": "v1-d3b898d1fbdfa4a2d6b49c2c3484ff3ebcb0c14c98c2d413149230ba33c850bb",
-    "sourceCommit": "4844029e402d6bd2fe735add8abf6d46735f8ed5"
+    "sourceHash": "v1-fd0e949ed45f18c77baa00d8f1aa8bfb6edbd5dded5b97a4a3a8e7f3e903037c",
+    "sourceCommit": "0ca9712c0ac03bb0121cc7e81b202d0c45ac02ca"
   }
 }
